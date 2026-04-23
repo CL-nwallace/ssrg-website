@@ -89,12 +89,14 @@ export default async function MediaPage() {
               : category.fallbackImage;
             return (
               <FadeIn key={category.slug} delay={index * 0.1}>
-                <MediaCategory
-                  image={image}
-                  title={category.title}
-                  description={category.description}
-                  href="#"
-                />
+                <section aria-label={category.title}>
+                  <MediaCategory
+                    image={image}
+                    title={category.title}
+                    description={category.description}
+                    href="#"
+                  />
+                </section>
               </FadeIn>
             );
           })}

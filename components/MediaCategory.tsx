@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -24,12 +23,11 @@ export default function MediaCategory({
         transition={{ duration: 0.3 }}
         className="group relative aspect-[4/3] rounded-lg overflow-hidden cursor-pointer"
       >
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={image}
           alt={title}
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-110"
-          sizes="(max-width: 768px) 100vw, 50vw"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
         {/* Overlay */}
         <div className="absolute inset-0 bg-bg-deep/50 group-hover:bg-bg-deep/70 transition-colors duration-300" />
