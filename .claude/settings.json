@@ -1,0 +1,18 @@
+{
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/route-skills.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
