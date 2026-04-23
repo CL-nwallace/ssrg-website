@@ -11,10 +11,23 @@ Migration of the SSRG exotic car club site off Wix onto Next.js 14 (App Router) 
 
 ## Supabase
 
-- Schema lives in `supabase/migrations/` (`0001_initial.sql` is the current baseline). Apply via Supabase dashboard → SQL Editor, or `supabase db push` if the CLI is wired up.
-- Seed data in `supabase/seed.sql` (idempotent — safe to re-run).
-- Env vars: copy `.env.example` to `.env.local` and fill with values from Supabase → Project Settings → API. Never commit `.env.local`.
-- Public pages read via `lib/supabase/server.ts` (server components) and `lib/supabase/client.ts` (client components). Rich-text event descriptions are sanitized through `lib/render-html.ts`.
+Project ref `agshdipndimperxuwjqy` (linked via `npx supabase link`). CLI commands run from repo root:
+
+- `npx supabase db push` — apply new migrations in `supabase/migrations/`
+- `npx supabase db push --include-seed` — apply seed from `supabase/seed.sql` (idempotent)
+- `npx supabase db query "<sql>" --linked` — run ad-hoc SQL against remote
+- `npx supabase storage cp <local> ss:///bucket/path --linked --experimental` — upload files to Storage
+- Env vars: copy `.env.example` to `.env.local` (gitignored) and populate from Supabase → Project Settings → API. Public pages read via `lib/supabase/server.ts` (server components) and `lib/supabase/client.ts` (client components). Rich-text HTML is sanitized through `lib/render-html.ts` (`sanitize-html` — avoid jsdom-pulling libs, they break Vercel's serverless bundler).
+
+## Vercel
+
+Project `nwallace-3136s-projects/ssrg-website` (framework `nextjs`, Node 22). Production: https://ssrg-website-nwallace-3136s-projects.vercel.app.
+
+- `npx vercel deploy` — preview deploy
+- `npx vercel deploy --prod` — production deploy
+- `npx vercel env ls` / `npx vercel env add <name> <env>` — manage env vars (preview env wants `""` as the branch-positional arg for "all preview branches")
+- `npx vercel logs <url> --no-follow --level error -n 50 -x` — runtime logs (use `-x` for full error bodies)
+- Project-level settings (framework, Node version, protection) live on Vercel and are patched via `PATCH https://api.vercel.com/v9/projects/<id>?teamId=<team>` with the CLI's cached bearer token at `~/Library/Application Support/com.vercel.cli/auth.json`.
 
 ## Default skills for this project
 
