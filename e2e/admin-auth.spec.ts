@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { signInAsNonAdmin, serviceClient } from "./helpers/admin-session";
+import { signInAsAdmin, signInAsNonAdmin, serviceClient } from "./helpers/admin-session";
 
 test.describe("Admin auth", () => {
   test("unauthenticated /admin redirects to /admin/login", async ({ page }) => {
@@ -29,5 +29,30 @@ test.describe("Admin auth", () => {
     await page.goto("/admin");
     expect(page.url()).toContain("/admin/login");
     expect(page.url()).toContain("error=not_authorized");
+  });
+});
+
+test.describe("Admin layout", () => {
+  test.beforeAll(async () => {
+    const admin = serviceClient();
+    await admin
+      .from("admin_emails")
+      .upsert({ email: "nickwallibe@gmail.com" });
+  });
+
+  test("admin can access /admin and sees their email", async ({ page, context }) => {
+    await signInAsAdmin(context, "nickwallibe@gmail.com");
+    await page.goto("/admin");
+    await expect(page.getByText("nickwallibe@gmail.com")).toBeVisible();
+    await expect(page.getByRole("link", { name: /events/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /media/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /audit/i })).toBeVisible();
+  });
+
+  test("logout returns the admin to /admin/login", async ({ page, context }) => {
+    await signInAsAdmin(context, "nickwallibe@gmail.com");
+    await page.goto("/admin");
+    await page.getByRole("button", { name: /sign out/i }).click();
+    await page.waitForURL("**/admin/login");
   });
 });
