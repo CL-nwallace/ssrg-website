@@ -21,10 +21,11 @@ function SubmitButton() {
 export default function LoginPage({
   searchParams,
 }: {
-  searchParams: { error?: string };
+  searchParams: { error?: string; message?: string };
 }) {
   const [state, formAction] = useFormState(signInWithMagicLink, null);
   const notAuthorized = searchParams.error === "not_authorized";
+  const exchangeFailed = searchParams.error === "exchange_failed";
 
   if (state?.ok) {
     return (
@@ -51,6 +52,12 @@ export default function LoginPage({
           <p className="mb-4 rounded bg-red-50 px-4 py-3 text-sm text-red-800">
             That email is not on the admin list. Contact the board if this looks
             wrong.
+          </p>
+        )}
+
+        {exchangeFailed && (
+          <p className="mb-4 rounded bg-red-50 px-4 py-3 text-sm text-red-800">
+            Couldn&apos;t complete sign-in: {searchParams.message ?? "unknown error"}. Request a new magic link.
           </p>
         )}
 
