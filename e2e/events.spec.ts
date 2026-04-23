@@ -20,7 +20,7 @@ test.describe("Events Page", () => {
 
     await expect(page.locator("text=LA to Las Vegas")).toBeVisible();
     await expect(page.locator("text=$3,000.00")).toBeVisible();
-    await expect(page.locator("text=Register Now")).toBeVisible();
+    await expect(page.locator("text=Register Now").first()).toBeVisible();
   });
 
   test("event card has an image", async ({ page }) => {

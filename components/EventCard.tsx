@@ -1,14 +1,22 @@
 import Image from "next/image";
 import Link from "next/link";
+import { sanitizedHtml } from "@/lib/render-html";
 
 interface EventCardProps {
   image: string;
   title: string;
   price: string;
   href: string;
+  descriptionHtml?: string;
 }
 
-export default function EventCard({ image, title, price, href }: EventCardProps) {
+export default function EventCard({
+  image,
+  title,
+  price,
+  href,
+  descriptionHtml,
+}: EventCardProps) {
   return (
     <div className="group bg-bg-elevated border border-subtle rounded-lg overflow-hidden hover:border-gold-muted/30 transition-colors">
       <div className="aspect-square relative overflow-hidden">
@@ -23,6 +31,12 @@ export default function EventCard({ image, title, price, href }: EventCardProps)
       <div className="p-6">
         <h3 className="font-serif text-large text-text-primary">{title}</h3>
         <p className="mt-2 text-body text-gold font-semibold">{price}</p>
+        {descriptionHtml ? (
+          <div
+            className="mt-4 text-small text-text-secondary prose prose-invert prose-sm max-w-none"
+            dangerouslySetInnerHTML={sanitizedHtml(descriptionHtml)}
+          />
+        ) : null}
         <Link
           href={href}
           className="inline-block mt-4 px-6 py-3 bg-gold text-bg-deep font-semibold text-small rounded hover:bg-gold-light transition-colors cursor-pointer"
