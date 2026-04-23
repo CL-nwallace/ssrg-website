@@ -49,3 +49,62 @@ test.describe("Admin events list", () => {
     await expect(page.getByRole("link", { name: /new event/i })).toBeVisible();
   });
 });
+
+test("editing an event's title reflects on public /events", async ({ page, context }) => {
+  const admin = serviceClient();
+  const baseTitle = `Edit Test ${Date.now()}`;
+  const { data: ev } = await admin
+    .from("events")
+    .insert({
+      title: baseTitle,
+      event_date: "2030-07-01T09:00:00Z",
+      price_cents: 12345,
+      status: "published",
+    })
+    .select("id")
+    .single();
+
+  await signInAsAdmin(context, ADMIN_EMAIL);
+  await page.goto(`/admin/events/${ev!.id}`);
+  const newTitle = `${baseTitle} EDITED`;
+  await page.getByLabel(/title/i).fill(newTitle);
+  await page.getByRole("button", { name: /save/i }).click();
+  await page.waitForURL("**/admin/events");
+
+  await page.goto("/events");
+  await expect(page.getByText(newTitle)).toBeVisible();
+
+  await admin.from("events").delete().eq("id", ev!.id);
+});
+
+test("deleting an event removes it from /events and logs a delete in audit", async ({ page, context }) => {
+  const admin = serviceClient();
+  const title = `Delete Test ${Date.now()}`;
+  const { data: ev } = await admin
+    .from("events")
+    .insert({
+      title,
+      event_date: "2030-08-01T09:00:00Z",
+      price_cents: 6789,
+      status: "published",
+    })
+    .select("id")
+    .single();
+
+  await signInAsAdmin(context, ADMIN_EMAIL);
+  await page.goto("/admin/events");
+  const row = page.locator("tr", { hasText: title });
+  await row.getByRole("button", { name: /delete/i }).click();
+  await page.waitForURL("**/admin/events");
+
+  await page.goto("/events");
+  await expect(page.getByText(title)).toHaveCount(0);
+
+  const { data: auditRows } = await admin
+    .from("admin_audit_log")
+    .select("*")
+    .eq("entity_id", ev!.id)
+    .eq("action", "delete");
+  expect(auditRows?.length ?? 0).toBeGreaterThan(0);
+  expect(auditRows![0].snapshot).toMatchObject({ title });
+});

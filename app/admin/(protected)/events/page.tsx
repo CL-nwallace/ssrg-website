@@ -63,10 +63,15 @@ export default async function AdminEventsPage() {
                   {r.status}
                 </span>
               </td>
-              <td className="py-3 text-right">
+              <td className="py-3 text-right space-x-3">
                 <Link href={`/admin/events/${r.id}`} className="underline">
                   Edit
                 </Link>
+                <form action={`/admin/events/${r.id}/delete`} method="post" className="inline">
+                  <button type="submit" className="text-red-700 underline">
+                    Delete
+                  </button>
+                </form>
               </td>
             </tr>
           ))}
