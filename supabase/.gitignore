@@ -4,3 +4,12 @@
 
 # Local env files managed by Supabase CLI
 .env
+
+# Supabase
+.branches
+.temp
+
+# dotenvx
+.env.keys
+.env.local
+.env.*.local

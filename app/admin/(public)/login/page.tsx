@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormState, useFormStatus } from "react-dom";
-import { signInWithMagicLink } from "./actions";
+import { signInWithPassword } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +13,7 @@ function SubmitButton() {
       disabled={pending}
       className="mt-4 w-full rounded bg-black px-4 py-3 text-white font-medium disabled:opacity-50"
     >
-      {pending ? "Sending…" : "Send magic link"}
+      {pending ? "Signing in…" : "Sign in"}
     </button>
   );
 }
@@ -21,31 +21,17 @@ function SubmitButton() {
 export default function LoginPage({
   searchParams,
 }: {
-  searchParams: { error?: string; message?: string };
+  searchParams: { error?: string };
 }) {
-  const [state, formAction] = useFormState(signInWithMagicLink, null);
+  const [state, formAction] = useFormState(signInWithPassword, null);
   const notAuthorized = searchParams.error === "not_authorized";
-  const exchangeFailed = searchParams.error === "exchange_failed";
-
-  if (state?.ok) {
-    return (
-      <main className="min-h-screen flex items-center justify-center px-6">
-        <div className="max-w-md w-full">
-          <h1 className="text-2xl font-serif mb-4">Check your email</h1>
-          <p className="text-text-secondary">
-            We sent a magic link. Click it to finish signing in.
-          </p>
-        </div>
-      </main>
-    );
-  }
 
   return (
     <main className="min-h-screen flex items-center justify-center px-6">
       <form action={formAction} className="max-w-md w-full">
         <h1 className="text-2xl font-serif mb-2">SSRG admin</h1>
         <p className="text-text-secondary mb-6">
-          Sign in with the email the board has on file.
+          Sign in with the email and password the board has on file.
         </p>
 
         {notAuthorized && (
@@ -55,13 +41,7 @@ export default function LoginPage({
           </p>
         )}
 
-        {exchangeFailed && (
-          <p className="mb-4 rounded bg-red-50 px-4 py-3 text-sm text-red-800">
-            Couldn&apos;t complete sign-in: {searchParams.message ?? "unknown error"}. Request a new magic link.
-          </p>
-        )}
-
-        {state && !state.ok && (
+        {state && (
           <p className="mb-4 rounded bg-red-50 px-4 py-3 text-sm text-red-800">
             {state.error}
           </p>
@@ -78,7 +58,21 @@ export default function LoginPage({
           />
         </label>
 
+        <label className="block mt-4">
+          <span className="text-sm font-medium">Password</span>
+          <input
+            name="password"
+            type="password"
+            required
+            className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+          />
+        </label>
+
         <SubmitButton />
+
+        <p className="mt-6 text-xs text-text-muted">
+          Forgot your password? Contact Nico to have it reset.
+        </p>
       </form>
     </main>
   );

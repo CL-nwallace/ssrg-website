@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { signInAsAdmin, signInAsNonAdmin, serviceClient } from "./helpers/admin-session";
+import { signInAsAdmin, signInAsNonAdmin, serviceClient, ensureAuthUser } from "./helpers/admin-session";
 
 test.describe("Admin auth", () => {
   test("unauthenticated /admin redirects to /admin/login", async ({ page }) => {
@@ -8,30 +8,49 @@ test.describe("Admin auth", () => {
     expect(response?.status()).toBeLessThan(500);
   });
 
-  test("login page renders email input", async ({ page }) => {
+  test("login page renders email and password inputs", async ({ page }) => {
     await page.goto("/admin/login");
     await expect(page.getByLabel(/email/i)).toBeVisible();
-    await expect(page.getByRole("button", { name: /send magic link/i })).toBeVisible();
+    await expect(page.getByLabel(/password/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /sign in/i })).toBeVisible();
   });
 
-  test("submitting a valid email reaches the signInWithOtp action", async ({ page }) => {
-    // Supabase applies a project-wide rate limit to OTP emails. In local
-    // development we routinely hit it, so the assertion accepts either the
-    // success state ("Check your email") or the "email rate limit exceeded"
-    // error surfaced from Supabase — both prove the form hit the action and
-    // the server handled it. We are not verifying that the email actually
-    // sends; manual three-admin verification in Task 18 covers that.
-    const testEmail = `playwright-${Date.now()}@example.com`;
+  test("submitting valid admin email+password signs in and lands on /admin", async ({ page }) => {
+    const admin = serviceClient();
+    await admin.from("admin_emails").upsert({ email: "nickwallibe@gmail.com" });
+    await ensureAuthUser("nickwallibe@gmail.com", "Test-Admin-Password-1!");
+
     await page.goto("/admin/login");
-    await page.getByLabel(/email/i).fill(testEmail);
-    await page.getByRole("button", { name: /send magic link/i }).click();
-    await expect(
-      page.getByText(/check your email|email rate limit exceeded/i),
-    ).toBeVisible();
+    await page.getByLabel(/email/i).fill("nickwallibe@gmail.com");
+    await page.getByLabel(/password/i).fill("Test-Admin-Password-1!");
+    await page.getByRole("button", { name: /sign in/i }).click();
+    await page.waitForURL("**/admin");
+    await expect(page.getByText("nickwallibe@gmail.com")).toBeVisible();
   });
 
-  test("non-admin email is redirected to login with error", async ({ page, context }) => {
-    // Ensure the non-admin email is NOT in admin_emails.
+  test("wrong password surfaces an error", async ({ page }) => {
+    await ensureAuthUser("nickwallibe@gmail.com", "Test-Admin-Password-1!");
+    await page.goto("/admin/login");
+    await page.getByLabel(/email/i).fill("nickwallibe@gmail.com");
+    await page.getByLabel(/password/i).fill("wrong-password");
+    await page.getByRole("button", { name: /sign in/i }).click();
+    await expect(page.getByText(/invalid login credentials/i)).toBeVisible();
+  });
+
+  test("non-admin email is rejected with admin-list error", async ({ page }) => {
+    const admin = serviceClient();
+    await admin.from("admin_emails").delete().eq("email", "notadmin@example.com");
+    await ensureAuthUser("notadmin@example.com", "Test-NonAdmin-Password-1!");
+
+    await page.goto("/admin/login");
+    await page.getByLabel(/email/i).fill("notadmin@example.com");
+    await page.getByLabel(/password/i).fill("Test-NonAdmin-Password-1!");
+    await page.getByRole("button", { name: /sign in/i }).click();
+    await expect(page.getByText(/not on the admin list/i)).toBeVisible();
+  });
+
+  test("non-admin session at /admin redirects to login with not_authorized", async ({ page, context }) => {
+    // Covers the middleware path: a valid Supabase session whose email isn't in admin_emails.
     const admin = serviceClient();
     await admin.from("admin_emails").delete().eq("email", "notadmin@example.com");
     await signInAsNonAdmin(context, "notadmin@example.com");

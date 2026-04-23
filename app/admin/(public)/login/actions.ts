@@ -1,40 +1,52 @@
 "use server";
 
-import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { logAudit } from "@/lib/admin/audit";
 
-type SignInResult = { ok: true } | { ok: false; error: string };
+type SignInResult = { ok: false; error: string };
 
-function requestOrigin(): string {
-  // Derive the origin from the current request so every deploy (preview,
-  // production, localhost) sends magic-link emails that redirect back to
-  // itself, not to a stale Site URL env var.
-  const h = headers();
-  const host = h.get("host");
-  if (host) {
-    const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-    return `${proto}://${host}`;
-  }
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-}
-
-export async function signInWithMagicLink(
+export async function signInWithPassword(
   _prev: SignInResult | null,
   formData: FormData,
 ): Promise<SignInResult> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "");
+
   if (!email || !email.includes("@")) {
-    return { ok: false, error: "Enter a valid email." };
+    return { error: "Enter a valid email.", ok: false };
+  }
+  if (!password) {
+    return { error: "Enter your password.", ok: false };
   }
 
   const supabase = createSupabaseServerClient();
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: `${requestOrigin()}/admin/auth/callback` },
-  });
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    return { ok: false, error: error.message };
+    return { error: error.message, ok: false };
   }
-  return { ok: true };
+
+  // Verify allowlist before considering this a successful admin sign-in.
+  // Middleware will also re-check on the redirect, but catching it here gives
+  // a cleaner error state and avoids an audit row for a session we'll kill.
+  const { data: allowed } = await supabase
+    .from("admin_emails")
+    .select("email")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (!allowed) {
+    await supabase.auth.signOut();
+    return { error: "That email is not on the admin list.", ok: false };
+  }
+
+  await logAudit({
+    adminEmail: email,
+    action: "login",
+    entityType: "auth",
+    entityId: null,
+  });
+
+  redirect("/admin");
 }
