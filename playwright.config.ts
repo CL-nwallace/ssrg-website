@@ -1,4 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
+import { loadEnvConfig } from "@next/env";
+
+// Load .env.local so test helpers (serviceClient, etc.) can read Supabase keys.
+loadEnvConfig(process.cwd());
 
 export default defineConfig({
   testDir: "./e2e",

@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "SSRG | Exotic Car Lifestyle | California",
@@ -27,9 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased bg-bg-deep text-text-primary">
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
+        {children}
       </body>
     </html>
   );
