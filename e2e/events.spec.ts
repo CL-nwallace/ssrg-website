@@ -28,3 +28,17 @@ test.describe("Events Page", () => {
     await expect(eventImage.first()).toBeVisible();
   });
 });
+
+test.describe("Events success page", () => {
+  test("renders confirmation copy and reference id", async ({ page }) => {
+    await page.goto("/events/success?session_id=cs_test_example_123");
+    await expect(page.locator("h1")).toContainText("Thanks for registering");
+    await expect(page.locator("text=cs_test_example_123")).toBeVisible();
+    await expect(page.locator("a", { hasText: "Back to events" })).toBeVisible();
+  });
+
+  test("renders even with no session_id query param", async ({ page }) => {
+    await page.goto("/events/success");
+    await expect(page.locator("h1")).toContainText("Thanks for registering");
+  });
+});
