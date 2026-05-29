@@ -1,20 +1,19 @@
 import Image from "next/image";
-import Link from "next/link";
 import { sanitizedHtml } from "@/lib/render-html";
 
 interface EventCardProps {
+  eventId: string;
   image: string;
   title: string;
   price: string;
-  href: string;
   descriptionHtml?: string;
 }
 
 export default function EventCard({
+  eventId,
   image,
   title,
   price,
-  href,
   descriptionHtml,
 }: EventCardProps) {
   return (
@@ -37,12 +36,20 @@ export default function EventCard({
             dangerouslySetInnerHTML={sanitizedHtml(descriptionHtml)}
           />
         ) : null}
-        <Link
-          href={href}
-          className="inline-block mt-4 px-6 py-3 bg-gold text-bg-deep font-semibold text-small rounded hover:bg-gold-light transition-colors cursor-pointer"
+        <form
+          action="/api/checkout"
+          method="POST"
+          className="mt-4"
+          data-testid={`register-form-${eventId}`}
         >
-          Register Now
-        </Link>
+          <input type="hidden" name="event_id" value={eventId} />
+          <button
+            type="submit"
+            className="inline-block px-6 py-3 bg-gold text-bg-deep font-semibold text-small rounded hover:bg-gold-light transition-colors cursor-pointer"
+          >
+            Register Now
+          </button>
+        </form>
       </div>
     </div>
   );

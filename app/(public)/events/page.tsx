@@ -61,10 +61,10 @@ export default async function EventsPage() {
               {events.map((event) => (
                 <FadeIn key={event.id}>
                   <EventCard
+                    eventId={event.id}
                     image={coverUrl(supabaseUrl, event.cover_image_path)}
                     title={event.title}
                     price={formatPrice(event.price_cents)}
-                    href="#"
                     descriptionHtml={event.description_html}
                   />
                 </FadeIn>
