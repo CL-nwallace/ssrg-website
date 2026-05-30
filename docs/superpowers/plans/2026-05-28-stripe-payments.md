@@ -1148,7 +1148,7 @@ test.describe("Stripe Checkout end-to-end", () => {
     // are stable across years but if Stripe redesigns Checkout, update these.
     await page.waitForURL(/checkout\.stripe\.com/, { timeout: 15_000 });
 
-    await page.getByLabel(/email/i).fill("test+playwright@ssrg.com");
+    await page.getByLabel(/email/i).fill("test+playwright@ssrgofficial.com");
     await page.getByLabel(/card number/i).fill("4242424242424242");
     await page.getByLabel(/expiration/i).fill("1234");
     await page.getByLabel(/cvc/i).fill("123");
@@ -1164,7 +1164,7 @@ test.describe("Stripe Checkout end-to-end", () => {
     const reg = await waitForRegistration(eventId, { timeoutMs: 20_000 });
     expect(reg.amount_paid_cents).toBe(1000);
     expect(reg.car_make_model).toBe("McLaren 720S");
-    expect(reg.email).toBe("test+playwright@ssrg.com");
+    expect(reg.email).toBe("test+playwright@ssrgofficial.com");
     expect(reg.instagram_handle).toBeNull();
   });
 });

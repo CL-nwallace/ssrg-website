@@ -3,10 +3,10 @@
 -- Prerequisite (manual, dashboard): upload the image files referenced below into the
 -- event-covers and media buckets under the paths used here. See CLAUDE.md.
 
--- Admin email allowlist (confirmed 2026-04-22).
+-- Admin email allowlist (domain corrected 2026-05-29 from @ssrg.com to @ssrgofficial.com).
 insert into public.admin_emails (email) values
-  ('sally@ssrg.com'),
-  ('james@ssrg.com')
+  ('sally@ssrgofficial.com'),
+  ('james@ssrgofficial.com')
 on conflict (email) do nothing;
 
 -- Events. The "LA to Las Vegas" $3,000 row is load-bearing for e2e/events.spec.ts.
