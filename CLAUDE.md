@@ -39,6 +39,17 @@ Three admins in `public.admin_emails` (nickwallibe@, sally@, james@). Auth is **
 - Add an admin: `insert into public.admin_emails (email) values ('...');` then create/ensure the auth user with a password.
 - Forgot-password self-serve flow is **not** built. Admins contact Nico.
 
+## Stripe
+
+Single-ticket Checkout for `/events` (v1). Inline `price_data` (no Stripe Products/Prices), `custom_fields` for car make/model (required) and Instagram handle (optional). Refunds in Stripe Dashboard; the `registrations` row stays as the historical record of payment. Webhook is the source of truth — the `/events/success` page is read-only and the registration row never depends on the user's browser making it back.
+
+- **Modes:** test in Development + Preview, live in Production. Required env vars on Vercel: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`.
+- **Local webhook loop:** `stripe listen --api-key $STRIPE_SECRET_KEY --forward-to http://localhost:3000/api/stripe/webhook --events checkout.session.completed`. The printed `whsec_…` is per-machine stable — paste it into `.env.local` once and re-use.
+- **Test cards (test mode only):** `4242 4242 4242 4242` succeeds; `4000 0000 0000 0002` declines; `4000 0025 0000 3155` triggers 3DS.
+- **Registered endpoints (Test mode):** one endpoint `we_1TgThOQhL9YIw0hy8bsZujsY` at `https://ssrg-website-git-main-nwallace-3136s-projects.vercel.app/api/stripe/webhook`, subscribed to `checkout.session.completed` only. The endpoint id and URL can be looked up via `stripe webhook_endpoints list --api-key $STRIPE_SECRET_KEY`. The endpoint's `whsec_…` is the value stored as `STRIPE_WEBHOOK_SECRET` in Vercel **Preview**.
+- **Re-pointing test endpoint at a preview branch:** when you start using non-main preview deploys and want their webhooks to land, either (a) update the URL on the existing endpoint with `stripe webhook_endpoints update we_… --url <new-preview-url>` and update `STRIPE_WEBHOOK_SECRET` in Vercel Preview (secret stays the same on update), or (b) create a second endpoint for that URL and decide which whsec_ Preview should hold.
+- **Live mode (not yet wired):** still pending. When ready: rotate `sk_live_…`, register a separate Live-mode endpoint at `https://ssrg-website-nwallace-3136s-projects.vercel.app/api/stripe/webhook` for `checkout.session.completed`, add `STRIPE_SECRET_KEY` + that endpoint's `whsec_…` to Vercel **Production**, then `npx vercel deploy --prod` and smoke-test with a $0.50 throwaway event.
+
 ## Vercel
 
 Project `nwallace-3136s-projects/ssrg-website` (framework `nextjs`, Node 22). Production: https://ssrg-website-nwallace-3136s-projects.vercel.app.
