@@ -3,29 +3,27 @@ import Stripe from "stripe";
 export function buildCheckoutSessionCompletedPayload(args: {
   sessionId: string;
   eventId: string;
+  registrationId: string;
   amountTotal: number;
-  email: string;
-  name: string;
-  carMakeModel: string;
-  instagramHandle?: string | null;
+  /** Defaults to amountTotal; pass a different value to simulate a mismatch. */
+  amountExpectedCents?: number;
+  email?: string;
+  name?: string;
 }): string {
   const session = {
     id: args.sessionId,
     object: "checkout.session",
     amount_total: args.amountTotal,
     currency: "usd",
-    metadata: { event_id: args.eventId },
-    customer_details: { email: args.email, name: args.name },
-    custom_fields: [
-      {
-        key: "car_make_model",
-        text: { value: args.carMakeModel },
-      },
-      {
-        key: "instagram_handle",
-        text: { value: args.instagramHandle ?? null },
-      },
-    ],
+    metadata: {
+      event_id: args.eventId,
+      registration_id: args.registrationId,
+      amount_expected_cents: String(args.amountExpectedCents ?? args.amountTotal),
+    },
+    customer_details: {
+      email: args.email ?? "buyer@example.com",
+      name: args.name ?? "Test Buyer",
+    },
     payment_status: "paid",
     status: "complete",
   };
