@@ -20,6 +20,10 @@ test.describe("Events Page", () => {
 
     await expect(page.locator("text=LA to Las Vegas")).toBeVisible();
     await expect(page.locator("text=$3,000.00")).toBeVisible();
+
+    // Monterey Rally registration stays open until 2026-08-13.
+    await expect(page.locator("text=Monterey Rally 2026")).toBeVisible();
+    await expect(page.locator("text=$599.00")).toBeVisible();
     await expect(page.locator("text=Register Now").first()).toBeVisible();
   });
 

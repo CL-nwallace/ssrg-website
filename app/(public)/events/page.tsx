@@ -12,6 +12,7 @@ type EventRow = {
   price_cents: number;
   description_html: string;
   cover_image_path: string | null;
+  registration_deadline: string | null;
 };
 
 const priceFormatter = new Intl.NumberFormat("en-US", {
@@ -33,7 +34,9 @@ export default async function EventsPage() {
   const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from("events")
-    .select("id, title, event_date, price_cents, description_html, cover_image_path")
+    .select(
+      "id, title, event_date, price_cents, description_html, cover_image_path, registration_deadline",
+    )
     .eq("status", "published")
     .order("event_date", { ascending: true });
 
@@ -58,17 +61,23 @@ export default async function EventsPage() {
         <div className="max-w-7xl mx-auto">
           {events.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {events.map((event) => (
-                <FadeIn key={event.id}>
-                  <EventCard
-                    eventId={event.id}
-                    image={coverUrl(supabaseUrl, event.cover_image_path)}
-                    title={event.title}
-                    price={formatPrice(event.price_cents)}
-                    descriptionHtml={event.description_html}
-                  />
-                </FadeIn>
-              ))}
+                {events.map((event) => {
+                  const closesAt = new Date(
+                    event.registration_deadline ?? event.event_date,
+                  );
+                  return (
+                    <FadeIn key={event.id}>
+                      <EventCard
+                        eventId={event.id}
+                        image={coverUrl(supabaseUrl, event.cover_image_path)}
+                        title={event.title}
+                        price={formatPrice(event.price_cents)}
+                        descriptionHtml={event.description_html}
+                        registrationOpen={closesAt.getTime() > Date.now()}
+                      />
+                    </FadeIn>
+                  );
+                })}
             </div>
           ) : (
             <div className="text-center py-24">
