@@ -16,7 +16,7 @@ test.describe("Events Page", () => {
   });
 
   test("event cards render with title, price, and CTA", async ({ page }) => {
-    const title = `Events Card ${Date.now()}`;
+    const title = `Events Card ${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const eventId = await seedTestEvent({ title, price_cents: 59900 });
     try {
       await page.goto("/events");

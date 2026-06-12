@@ -10,7 +10,7 @@ test.describe("Event registration page", () => {
 
   test.beforeEach(async () => {
     eventId = await seedTestEvent({
-      title: `RegPage ${Date.now()}`,
+      title: `RegPage ${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       price_cents: 59900,
     });
   });
@@ -71,7 +71,7 @@ test.describe("Event registration page", () => {
   });
 
   test("closed event hides the form and the events-page register link", async ({ page }) => {
-    const closedTitle = `Closed ${Date.now()}`;
+    const closedTitle = `Closed ${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const closedId = await seedTestEvent({
       title: closedTitle,
       price_cents: 1000,

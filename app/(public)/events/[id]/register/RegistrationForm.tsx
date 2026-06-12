@@ -84,17 +84,21 @@ export default function RegistrationForm({ eventId, basePriceCents, config }: Pr
       waiver_accepted: form.get("waiver_accepted") === "on",
     };
 
-    const res = await fetch("/api/checkout", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
-    if (res.ok && data.url) {
-      window.location.assign(data.url);
-      return;
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+      if (res.ok && data.url) {
+        window.location.assign(data.url);
+        return;
+      }
+      setError(data.error ?? "Something went wrong. Please try again.");
+    } catch {
+      setError("Something went wrong. Please try again.");
     }
-    setError(data.error ?? "Something went wrong. Please try again.");
     setSubmitting(false);
   }
 
