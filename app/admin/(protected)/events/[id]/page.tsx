@@ -12,7 +12,9 @@ export default async function EditEventPage({
   const supabase = createSupabaseServerClient();
   const { data } = await supabase
     .from("events")
-    .select("id, title, event_date, price_cents, description_html, cover_image_path, status")
+    .select(
+      "id, title, event_date, price_cents, description_html, cover_image_path, status, registration_deadline, registration_config",
+    )
     .eq("id", params.id)
     .maybeSingle();
 

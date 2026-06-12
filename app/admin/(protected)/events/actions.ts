@@ -6,8 +6,35 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { logAudit } from "@/lib/admin/audit";
 import { validateImage, uuidFilename } from "@/lib/admin/uploads";
+import {
+  parseRegistrationConfig,
+  type RegistrationConfig,
+} from "@/lib/registration/config";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
+
+function parseRegistrationFields(formData: FormData):
+  | { ok: true; deadline: string | null; config: RegistrationConfig }
+  | { ok: false; error: string } {
+  const deadlineRaw = String(formData.get("registration_deadline") ?? "").trim();
+  const deadline = deadlineRaw || null;
+
+  let parsedJson: unknown;
+  try {
+    parsedJson = JSON.parse(String(formData.get("registration_config") ?? ""));
+  } catch {
+    return { ok: false, error: "Registration settings are malformed." };
+  }
+  const config = parseRegistrationConfig(parsedJson);
+  if (!config) {
+    return {
+      ok: false,
+      error:
+        "Registration settings are invalid — check that prices are not negative, every list has at least one option, and the waiver text is not empty.",
+    };
+  }
+  return { ok: true, deadline, config };
+}
 
 function parsePriceCents(raw: FormDataEntryValue | null): number | null {
   const s = String(raw ?? "").trim();
@@ -34,6 +61,9 @@ export async function createEvent(
   if (!eventDate) return { ok: false, error: "Event date is required." };
   if (priceCents === null) return { ok: false, error: "Price is required." };
 
+  const reg = parseRegistrationFields(formData);
+  if (!reg.ok) return { ok: false, error: reg.error };
+
   // Optional cover
   let coverImagePath: string | null = null;
   const coverFile = formData.get("cover_image") as File | null;
@@ -58,6 +88,8 @@ export async function createEvent(
       description_html: descriptionHtml,
       status,
       cover_image_path: coverImagePath,
+      registration_deadline: reg.deadline,
+      registration_config: reg.config,
     })
     .select("*")
     .single();
@@ -95,12 +127,17 @@ export async function updateEvent(
   if (!eventDate) return { ok: false, error: "Event date is required." };
   if (priceCents === null) return { ok: false, error: "Price is required." };
 
+  const reg = parseRegistrationFields(formData);
+  if (!reg.ok) return { ok: false, error: reg.error };
+
   const patch: Record<string, unknown> = {
     title,
     event_date: eventDate,
     price_cents: priceCents,
     description_html: descriptionHtml,
     status,
+    registration_deadline: reg.deadline,
+    registration_config: reg.config,
   };
 
   const coverFile = formData.get("cover_image") as File | null;

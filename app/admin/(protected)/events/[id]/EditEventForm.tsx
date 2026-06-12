@@ -3,6 +3,8 @@
 import { useFormState, useFormStatus } from "react-dom";
 import TiptapEditor from "@/components/admin/TiptapEditor";
 import CoverImageInput from "@/components/admin/CoverImageInput";
+import RegistrationSettingsFields from "@/components/admin/RegistrationSettingsFields";
+import { effectiveConfig } from "@/lib/registration/config";
 import { updateEvent } from "../actions";
 
 type Props = {
@@ -14,6 +16,8 @@ type Props = {
     description_html: string;
     status: "draft" | "published";
     coverUrl: string | null;
+    registration_deadline: string | null;
+    registration_config: unknown;
   };
 };
 
@@ -93,6 +97,14 @@ export default function EditEventForm({ event }: Props) {
             <option value="published">Published</option>
           </select>
         </label>
+        <RegistrationSettingsFields
+          initialConfig={effectiveConfig(event.registration_config)}
+          initialDeadline={
+            event.registration_deadline
+              ? toLocalDateTimeInput(event.registration_deadline)
+              : null
+          }
+        />
         <SubmitButton />
       </form>
     </>
