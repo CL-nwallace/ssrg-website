@@ -1,16 +1,8 @@
 import Stripe from "stripe";
-import { createClient } from "@supabase/supabase-js";
 import { stripeServer } from "@/lib/stripe";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 export const dynamic = "force-dynamic";
-
-function serviceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } },
-  );
-}
 
 export async function POST(request: Request): Promise<Response> {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -37,68 +29,55 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const session = event.data.object as Stripe.Checkout.Session;
-  const eventId = session.metadata?.event_id;
-  if (!eventId) {
-    console.error("stripe webhook: session has no metadata.event_id", session.id);
-    return new Response("Missing event_id metadata", { status: 400 });
+  const registrationId = session.metadata?.registration_id;
+  if (!registrationId) {
+    console.error("stripe webhook: session has no metadata.registration_id", session.id);
+    return new Response("Missing registration_id metadata", { status: 400 });
   }
 
-  const supabase = serviceClient();
-
-  const { data: eventRow, error: eventErr } = await supabase
-    .from("events")
-    .select("id, price_cents")
-    .eq("id", eventId)
+  const supabase = createSupabaseServiceClient();
+  const { data: registration, error: regErr } = await supabase
+    .from("registrations")
+    .select("id, status")
+    .eq("id", registrationId)
     .maybeSingle();
-  if (eventErr) {
-    console.error("stripe webhook: failed to load event", eventErr);
+  if (regErr) {
+    console.error("stripe webhook: failed to load registration", regErr);
     return new Response("Internal error", { status: 500 });
   }
-  if (!eventRow) {
-    console.error("stripe webhook: event not found", { sessionId: session.id, eventId });
-    return new Response("Event not found", { status: 400 });
+  if (!registration) {
+    console.error("stripe webhook: registration not found", {
+      sessionId: session.id,
+      registrationId,
+    });
+    return new Response("Registration not found", { status: 400 });
   }
-  if ((session.amount_total ?? -1) !== eventRow.price_cents) {
+  // Duplicate delivery of an already-processed session.
+  if (registration.status === "paid") {
+    return new Response("ok", { status: 200 });
+  }
+
+  const expected = Number(session.metadata?.amount_expected_cents ?? NaN);
+  if (!Number.isFinite(expected) || (session.amount_total ?? -1) !== expected) {
     console.error("stripe webhook: amount_total mismatch", {
       sessionId: session.id,
-      expected: eventRow.price_cents,
+      expected,
       actual: session.amount_total,
     });
     return new Response("Amount mismatch", { status: 400 });
   }
 
-  const car =
-    session.custom_fields?.find((f) => f.key === "car_make_model")?.text?.value ?? "";
-  const igRaw =
-    session.custom_fields?.find((f) => f.key === "instagram_handle")?.text?.value;
-  const ig = igRaw && igRaw.length > 0 ? igRaw : null;
-
-  const email = session.customer_details?.email ?? "";
-  const name = session.customer_details?.name ?? "";
-  if (!email || !name || !car) {
-    console.error("stripe webhook: missing required customer fields", {
-      sessionId: session.id,
-      hasEmail: !!email,
-      hasName: !!name,
-      hasCar: !!car,
-    });
-    return new Response("Missing required fields", { status: 400 });
-  }
-
-  const { error: insertErr } = await supabase.from("registrations").insert({
-    event_id: eventId,
-    stripe_session_id: session.id,
-    email,
-    name,
-    car_make_model: car,
-    instagram_handle: ig,
-    amount_paid_cents: session.amount_total ?? 0,
-  });
-
-  // 23505 = unique_violation on stripe_session_id; treat duplicate deliveries as success.
-  if (insertErr && insertErr.code !== "23505") {
-    console.error("stripe webhook: insert failed", insertErr);
-    return new Response("Insert failed", { status: 500 });
+  const { error: updateErr } = await supabase
+    .from("registrations")
+    .update({
+      status: "paid",
+      amount_paid_cents: session.amount_total ?? 0,
+      stripe_session_id: session.id,
+    })
+    .eq("id", registrationId);
+  if (updateErr) {
+    console.error("stripe webhook: update failed", updateErr);
+    return new Response("Update failed", { status: 500 });
   }
 
   return new Response("ok", { status: 200 });
