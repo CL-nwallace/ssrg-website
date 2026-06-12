@@ -50,3 +50,48 @@ select * from (values
 where not exists (
   select 1 from public.media m where m.category = v.category and m.storage_path = v.storage_path
 );
+
+-- Monterey Rally 2026: first event on the registration template (added 2026-06-11).
+-- The config shape must match RegistrationConfig in lib/registration/config.ts.
+insert into public.events
+  (title, event_date, price_cents, description_html, cover_image_path, status,
+   registration_deadline, registration_config)
+select
+  'Monterey Rally 2026',
+  timestamptz '2026-08-14 09:00:00-07',
+  59900,
+  '<p>Three days of driving, dinners, and Car Week. Base registration is per car and includes Thursday and Saturday lunch for driver and passenger.</p>',
+  null,
+  'published',
+  timestamptz '2026-08-13 23:59:00-07',
+  '{
+    "meals": [
+      {
+        "key": "thursday_lunch",
+        "label": "Thursday Lunch",
+        "note": "Message us if you have dietary restrictions.",
+        "options": ["Fish & Chips", "Cheese Burger", "Burger (no cheese)", "Caesar Salad", "Pork Taco"]
+      }
+    ],
+    "addons": [
+      { "key": "thursday_dinner", "label": "Thursday Dinner", "price_cents": 19900, "max_qty": 2 }
+    ],
+    "car_options": [
+      { "make": "Aston Martin", "models": ["All models"] },
+      { "make": "Audi", "models": ["R8"] },
+      { "make": "Bugatti", "models": ["All models"] },
+      { "make": "Chevrolet", "models": ["C8 Z06", "C8 ZR1"] },
+      { "make": "Ferrari", "models": ["All models"] },
+      { "make": "Koenigsegg", "models": ["All models"] },
+      { "make": "Lamborghini", "models": ["All models"] },
+      { "make": "Lotus", "models": ["All models"] },
+      { "make": "McLaren", "models": ["All models"] },
+      { "make": "Mercedes Benz", "models": ["AMG GTR/GTS/GTC", "AMG McLaren"] },
+      { "make": "Pagani", "models": ["All models"] },
+      { "make": "Porsche", "models": ["718 GTS/GT4/GT4RS", "991.1/991.2", "GT3/3RS/Turbo/Turbo S/GTS", "All 992 models", "918"] }
+    ],
+    "shirt_sizes": ["XS", "SML", "MED", "LRG", "XL", "XXL", "3XL"],
+    "passenger_enabled": true,
+    "waiver_text": "PLACEHOLDER WAIVER — final liability text pending from the club. By checking the box you acknowledge that motorsport and group-drive activities carry inherent risk and you release SSRG, its organizers, and venues from liability for injury or property damage arising from participation."
+  }'::jsonb
+where not exists (select 1 from public.events e where e.title = 'Monterey Rally 2026');
