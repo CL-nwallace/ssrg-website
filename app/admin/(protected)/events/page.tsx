@@ -64,6 +64,12 @@ export default async function AdminEventsPage() {
                 </span>
               </td>
               <td className="py-3 text-right space-x-3">
+                <Link
+                  href={`/admin/events/${r.id}/registrations`}
+                  className="underline"
+                >
+                  Registrations
+                </Link>
                 <Link href={`/admin/events/${r.id}`} className="underline">
                   Edit
                 </Link>
