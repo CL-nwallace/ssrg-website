@@ -9,7 +9,7 @@ insert into public.admin_emails (email) values
   ('james@ssrgofficial.com')
 on conflict (email) do nothing;
 
--- Events. The "LA to Las Vegas" $3,000 row is load-bearing for e2e/events.spec.ts.
+-- Events. Sample content only; e2e specs seed their own rows (admins curate these freely).
 insert into public.events (title, event_date, price_cents, description_html, cover_image_path, status)
 select * from (values
   (

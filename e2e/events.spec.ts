@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { seedTestEvent, deleteTestEvent } from "./helpers/registrations";
 
 test.describe("Events Page", () => {
   test.beforeEach(async ({ page }) => {
@@ -15,16 +16,18 @@ test.describe("Events Page", () => {
   });
 
   test("event cards render with title, price, and CTA", async ({ page }) => {
-    const eventsGrid = page.locator('[data-testid="events-grid"]');
-    await expect(eventsGrid).toBeVisible();
-
-    await expect(page.locator("text=LA to Las Vegas")).toBeVisible();
-    await expect(page.locator("text=$3,000.00")).toBeVisible();
-
-    // Monterey Rally registration stays open until 2026-08-13.
-    await expect(page.locator("text=Monterey Rally 2026")).toBeVisible();
-    await expect(page.locator("text=$599.00")).toBeVisible();
-    await expect(page.locator("text=Register Now").first()).toBeVisible();
+    const title = `Events Card ${Date.now()}`;
+    const eventId = await seedTestEvent({ title, price_cents: 59900 });
+    try {
+      await page.goto("/events");
+      const eventsGrid = page.locator('[data-testid="events-grid"]');
+      await expect(eventsGrid).toBeVisible();
+      await expect(page.getByText(title)).toBeVisible();
+      await expect(page.getByText("$599.00").first()).toBeVisible();
+      await expect(page.locator(`[data-testid="register-link-${eventId}"]`)).toBeVisible();
+    } finally {
+      await deleteTestEvent(eventId);
+    }
   });
 
   test("event card has an image", async ({ page }) => {
