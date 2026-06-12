@@ -94,4 +94,6 @@ select
     "passenger_enabled": true,
     "waiver_text": "PLACEHOLDER WAIVER — final liability text pending from the club. By checking the box you acknowledge that motorsport and group-drive activities carry inherent risk and you release SSRG, its organizers, and venues from liability for injury or property damage arising from participation."
   }'::jsonb
-where not exists (select 1 from public.events e where e.title = 'Monterey Rally 2026');
+-- ilike: an admin already created this event by hand as "MONTEREY Rally 2026";
+-- the case-insensitive check stops the seed from ever duplicating it.
+where not exists (select 1 from public.events e where e.title ilike 'Monterey Rally 2026');
