@@ -1,4 +1,4 @@
-// Full Stripe-hosted Checkout flow.
+// Full Stripe-hosted Checkout flow through the registration form.
 //
 // Requires BOTH of these to be running locally:
 //   1. `npm run dev` (or rely on Playwright's webServer config)
@@ -11,13 +11,13 @@
 //
 // KNOWN LIMITATION (2026-05-29): Stripe's current Checkout page renders
 // card inputs inside an iframe, so the `getByLabel(/card number/i)` etc.
-// selectors below time out. To get this spec green, swap to FrameLocator:
+// selectors below may time out. To get this spec green, swap to FrameLocator:
 //   const cardFrame = page.frameLocator('iframe[title*="card" i]');
 //   await cardFrame.getByLabel(/card number/i).fill('4242424242424242');
 // and verify the exact iframe attribute against the live Checkout page.
 // Functional coverage of our own code lives in the hermetic specs
-// (stripe-webhook.spec.ts + checkout-api.spec.ts) — this spec only adds
-// an end-to-end browser sanity check.
+// (stripe-webhook.spec.ts + registration-checkout.spec.ts) — this spec only
+// adds an end-to-end browser sanity check.
 //
 import { test, expect } from "@playwright/test";
 import {
@@ -43,35 +43,40 @@ test.describe("Stripe Checkout end-to-end", () => {
     if (eventId) await deleteTestEvent(eventId);
   });
 
-  test("member can register for an event end-to-end", async ({ page }) => {
-    test.setTimeout(60_000);
+  test("member registers with one dinner end-to-end", async ({ page }) => {
+    test.setTimeout(90_000);
 
-    await page.goto("/events");
-
-    // Find the form by event id (data-testid set in EventCard) and submit it.
-    const form = page.locator(`[data-testid="register-form-${eventId}"]`);
-    await expect(form).toBeVisible();
-    await form.getByRole("button", { name: /register/i }).click();
+    await page.goto(`/events/${eventId}/register`);
+    await page.getByLabel("First name *").fill("Test");
+    await page.getByLabel("Last name *").fill("Playwright");
+    await page.getByLabel("Email *").fill("test+playwright@ssrgofficial.com");
+    await page.getByLabel("T-shirt size *").selectOption("LRG");
+    await page.getByLabel("Car make *").selectOption("McLaren");
+    await page.getByLabel("Car model *").selectOption("All models");
+    await page.getByLabel("Your model *").fill("720S");
+    await page.getByLabel("Thursday Lunch — your meal *").selectOption("Pork Taco");
+    await page.getByLabel(/thursday dinner/i).selectOption("1");
+    await page.getByLabel("I have read and accept the waiver *").check();
+    await page.getByRole("button", { name: /continue to payment/i }).click();
 
     await page.waitForURL(/checkout\.stripe\.com/, { timeout: 15_000 });
 
-    await page.getByLabel(/email/i).fill("test+playwright@ssrgofficial.com");
     await page.getByLabel(/card number/i).fill("4242424242424242");
     await page.getByLabel(/expiration/i).fill("1234");
     await page.getByLabel(/cvc/i).fill("123");
     await page.getByLabel(/name on card/i).fill("Test Playwright Buyer");
-    await page.getByLabel(/car make.*model/i).fill("McLaren 720S");
-    // Instagram handle is optional; leave blank.
-
     await page.getByRole("button", { name: /pay/i }).click();
 
     await page.waitForURL(/\/events\/success/, { timeout: 30_000 });
     await expect(page.locator("h1")).toContainText("Thanks for registering");
 
-    const reg = await waitForRegistration(eventId, { timeoutMs: 20_000 });
-    expect(reg.amount_paid_cents).toBe(1000);
-    expect(reg.car_make_model).toBe("McLaren 720S");
+    const reg = await waitForRegistration(eventId, {
+      timeoutMs: 20_000,
+      status: "paid",
+    });
+    expect(reg.amount_paid_cents).toBe(1000 + 19900);
+    expect(reg.car_make).toBe("McLaren");
+    expect(reg.car_model).toBe("720S");
     expect(reg.email).toBe("test+playwright@ssrgofficial.com");
-    expect(reg.instagram_handle).toBeNull();
   });
 });
