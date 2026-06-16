@@ -82,30 +82,44 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ error: "Internal error." }, { status: 500 });
   }
 
+  const fallbackOrigin = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
+  const requestOrigin = request.headers.get("origin");
+  const allowedOrigins = new Set([
+    fallbackOrigin,
+    "http://localhost:3000",
+    ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+  ]);
   const origin =
-    request.headers.get("origin") ??
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+    requestOrigin && allowedOrigins.has(requestOrigin) ? requestOrigin : fallbackOrigin;
 
-  const session = await stripeServer().checkout.sessions.create({
-    mode: "payment",
-    line_items: lineItems.map((li) => ({
-      quantity: li.quantity,
-      price_data: {
-        currency: "usd",
-        unit_amount: li.unit_amount_cents,
-        product_data: { name: li.label },
+  let session;
+  try {
+    session = await stripeServer().checkout.sessions.create({
+      mode: "payment",
+      line_items: lineItems.map((li) => ({
+        quantity: li.quantity,
+        price_data: {
+          currency: "usd",
+          unit_amount: li.unit_amount_cents,
+          product_data: { name: li.label },
+        },
+      })),
+      billing_address_collection: "required",
+      customer_email: row.email,
+      metadata: {
+        event_id: event.id,
+        registration_id: registration.id,
+        amount_expected_cents: String(totalCents),
       },
-    })),
-    billing_address_collection: "required",
-    customer_email: row.email,
-    metadata: {
-      event_id: event.id,
-      registration_id: registration.id,
-      amount_expected_cents: String(totalCents),
-    },
-    success_url: `${origin}/events/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/events/${event.id}/register`,
-  });
+      success_url: `${origin}/events/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/events/${event.id}/register`,
+    });
+  } catch (err) {
+    console.error("checkout: Stripe session creation failed", err);
+    return NextResponse.json({ error: "Failed to create checkout session." }, { status: 500 });
+  }
 
   if (!session.url) {
     console.error("checkout: Stripe returned a session without a url");
@@ -115,10 +129,13 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  await supabase
+  const { error: sessionWriteErr } = await supabase
     .from("registrations")
     .update({ stripe_session_id: session.id })
     .eq("id", registration.id);
+  if (sessionWriteErr) {
+    console.error("checkout: failed to write back stripe_session_id", sessionWriteErr);
+  }
 
   return NextResponse.json({ url: session.url });
 }

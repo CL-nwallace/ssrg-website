@@ -57,6 +57,10 @@ export async function POST(request: Request): Promise<Response> {
     return new Response("ok", { status: 200 });
   }
 
+  if (session.payment_status && session.payment_status !== "paid") {
+    return new Response("ok", { status: 200 });
+  }
+
   const expected = Number(session.metadata?.amount_expected_cents ?? NaN);
   if (!Number.isFinite(expected) || (session.amount_total ?? -1) !== expected) {
     console.error("stripe webhook: amount_total mismatch", {
