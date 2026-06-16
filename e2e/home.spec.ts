@@ -10,17 +10,18 @@ test.describe("Home Page", () => {
     await expect(logo).toBeVisible({ timeout: 3000 });
   });
 
-  test("hero has background video on desktop", async ({ page, viewport }) => {
-    test.skip(!!viewport && viewport.width < 768, "Video hidden on mobile");
+  test("hero has background video on all viewports", async ({ page }) => {
     const video = page.locator("video");
     await expect(video).toBeVisible({ timeout: 3000 });
     await expect(video).toHaveAttribute("autoplay", "");
-    await expect(video).toHaveAttribute("muted", "");
     await expect(video).toHaveAttribute("loop", "");
+    await expect(video).toHaveAttribute("playsinline", "");
+    // The muted *property* (not just the attribute) is what gates mobile
+    // autoplay; the Hero forces it via a ref on mount.
+    expect(await video.evaluate((v: HTMLVideoElement) => v.muted)).toBe(true);
   });
 
-  test("hero video has correct source", async ({ page, viewport }) => {
-    test.skip(!!viewport && viewport.width < 768, "Video hidden on mobile");
+  test("hero video has correct source", async ({ page }) => {
     const source = page.locator("video source");
     await expect(source).toHaveAttribute("src", "/videos/hero.mp4");
   });

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
@@ -21,30 +22,36 @@ export default function Hero({
   fullHeight = true,
   showLogo = true,
 }: HeroProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    // React doesn't reliably reflect the `muted` attribute to the DOM property,
+    // and mobile browsers only autoplay muted inline video — force it, then
+    // kick playback. If autoplay is blocked (iOS Low Power Mode, data saver),
+    // the poster image stays put as the fallback.
+    v.muted = true;
+    v.play().catch(() => {});
+  }, []);
+
   return (
     <section
       className={`relative ${fullHeight ? "min-h-dvh" : "min-h-[50vh]"} flex items-center justify-center overflow-hidden`}
     >
-      {/* Video background (desktop) or static image fallback */}
+      {/* Video background (all viewports) with the image as poster + fallback */}
       {backgroundVideo ? (
-        <>
-          {/* Video for desktop */}
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            poster={backgroundImage}
-            className="absolute inset-0 w-full h-full object-cover hidden md:block"
-          >
-            <source src={backgroundVideo} type="video/mp4" />
-          </video>
-          {/* Static image fallback for mobile */}
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat md:hidden"
-            style={{ backgroundImage: `url(${backgroundImage})` }}
-          />
-        </>
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster={backgroundImage}
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src={backgroundVideo} type="video/mp4" />
+        </video>
       ) : (
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
