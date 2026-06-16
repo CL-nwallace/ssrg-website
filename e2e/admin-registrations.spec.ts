@@ -95,6 +95,40 @@ test.describe("Admin registrations view", () => {
     expect(csv).not.toContain("bob@example.com");
   });
 
+  test("CSV neutralizes spreadsheet formula injection in free-text fields", async ({
+    page,
+    context,
+  }) => {
+    await serviceClient()
+      .from("registrations")
+      .insert({
+        event_id: eventId,
+        status: "paid",
+        first_name: "=HYPERLINK(\"http://evil\")",
+        last_name: "Exploit",
+        email: "exploit@example.com",
+        shirt_size: "MED",
+        car_make: "McLaren",
+        car_model: "720S",
+        has_passenger: false,
+        answers: {},
+        waiver_accepted_at: new Date().toISOString(),
+        amount_paid_cents: 59900,
+        stripe_session_id: `cs_test_inject_${Date.now()}`,
+      });
+
+    await signInAsAdmin(context, ADMIN_EMAIL);
+    const res = await page.request.get(
+      `/admin/events/${eventId}/registrations/export`,
+    );
+    expect(res.status()).toBe(200);
+    const csv = await res.text();
+    // The cell starts with =, so it is quote-prefixed and (because it now
+    // contains a ") wrapped in quotes: "'=HYPERLINK(""http://evil"")"
+    expect(csv).toContain("'=HYPERLINK");
+    expect(csv).not.toContain(",=HYPERLINK");
+  });
+
   test("events list links to registrations", async ({ page, context }) => {
     await signInAsAdmin(context, ADMIN_EMAIL);
     await page.goto("/admin/events");

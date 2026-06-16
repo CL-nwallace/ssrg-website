@@ -1,7 +1,11 @@
 import type { PaidRegistration } from "./admin-data";
 
 function csvCell(v: string | number | null | undefined): string {
-  const s = v === null || v === undefined ? "" : String(v);
+  let s = v === null || v === undefined ? "" : String(v);
+  // Neutralize spreadsheet formula injection: registrant free-text (names,
+  // socials, car model) reaches this CSV, and a leading =/+/-/@ becomes a live
+  // formula when an admin opens the export in Excel/Sheets. Prefix with a quote.
+  if (/^[=+\-@]/.test(s)) s = `'${s}`;
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
