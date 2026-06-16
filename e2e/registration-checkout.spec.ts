@@ -25,6 +25,7 @@ function validBody(eventId: string): Record<string, unknown> {
     has_passenger: true,
     passenger: { first_name: "Pat", last_name: "Rider", shirt_size: "MED", social: "@pat" },
     meals: { thursday_lunch: { driver: "Pork Taco", passenger: "Caesar Salad" } },
+    dietary: { driver: ["Vegan"], passenger: ["Gluten Free"] },
     addons: { thursday_dinner: 2 },
     waiver_accepted: true,
   };
@@ -68,6 +69,8 @@ test.describe("/api/checkout (registration template)", () => {
     expect(row.passenger_first_name).toBe("Pat");
     expect(row.answers.addons!.thursday_dinner).toBe(2);
     expect(row.answers.meals!.thursday_lunch.passenger).toBe("Caesar Salad");
+    expect(row.answers.dietary!.driver).toEqual(["Vegan"]);
+    expect(row.answers.dietary!.passenger).toEqual(["Gluten Free"]);
     expect(row.waiver_accepted_at).not.toBeNull();
     expect(row.amount_paid_cents).toBeNull();
     expect(row.stripe_session_id).toMatch(/^cs_/);
@@ -162,6 +165,12 @@ test.describe("/api/checkout (registration template)", () => {
       const res = await postCheckout(body);
       expect(res.status(), JSON.stringify(body)).toBe(400);
     }
+    expect(await countRegistrations(eventId)).toBe(0);
+  });
+
+  test("rejects an unknown dietary restriction", async () => {
+    const res = await postCheckout({ ...validBody(eventId), dietary: { driver: ["Carnivore"] } });
+    expect(res.status()).toBe(400);
     expect(await countRegistrations(eventId)).toBe(0);
   });
 

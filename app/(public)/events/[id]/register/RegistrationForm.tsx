@@ -58,6 +58,13 @@ export default function RegistrationForm({ eventId, basePriceCents, config }: Pr
       };
     }
 
+    const dietary: { driver: string[]; passenger?: string[] } = {
+      driver: form.getAll("dietary_driver").map(String),
+      ...(hasPassenger
+        ? { passenger: form.getAll("dietary_passenger").map(String) }
+        : {}),
+    };
+
     const body = {
       event_id: eventId,
       first_name: String(form.get("first_name") ?? ""),
@@ -80,6 +87,7 @@ export default function RegistrationForm({ eventId, basePriceCents, config }: Pr
           }
         : undefined,
       meals,
+      dietary,
       addons: addonQty,
       waiver_accepted: form.get("waiver_accepted") === "on",
     };
@@ -250,6 +258,32 @@ export default function RegistrationForm({ eventId, basePriceCents, config }: Pr
                 <input name="passenger_social" className={inputClass} />
               </label>
             </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      {config.dietary_options.length > 0 ? (
+        <section className="space-y-4">
+          <h2 className={headingClass}>Dietary restrictions (optional)</h2>
+          <fieldset className="space-y-2" data-testid="dietary-driver">
+            <legend className="text-small text-text-secondary">Driver</legend>
+            {config.dietary_options.map((opt) => (
+              <label key={opt} className="flex items-center gap-2 text-small text-text-secondary">
+                <input type="checkbox" name="dietary_driver" value={opt} />
+                {opt}
+              </label>
+            ))}
+          </fieldset>
+          {hasPassenger ? (
+            <fieldset className="space-y-2" data-testid="dietary-passenger">
+              <legend className="text-small text-text-secondary">Passenger</legend>
+              {config.dietary_options.map((opt) => (
+                <label key={opt} className="flex items-center gap-2 text-small text-text-secondary">
+                  <input type="checkbox" name="dietary_passenger" value={opt} />
+                  {opt}
+                </label>
+              ))}
+            </fieldset>
           ) : null}
         </section>
       ) : null}

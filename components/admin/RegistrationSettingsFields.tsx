@@ -70,6 +70,7 @@ export default function RegistrationSettingsFields({
     })),
     car_options: textToCars(carsText),
     shirt_sizes: sizesText.split(",").map((s) => s.trim()).filter(Boolean),
+    dietary_options: initialConfig.dietary_options,
     passenger_enabled: passengerEnabled,
     waiver_text: waiverText,
   };

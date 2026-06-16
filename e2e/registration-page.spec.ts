@@ -45,6 +45,9 @@ test.describe("Event registration page", () => {
     await page.getByLabel("Passenger last name *").fill("Rider");
     await page.getByLabel("Passenger t-shirt size *").selectOption("MED");
 
+    await page.getByTestId("dietary-driver").getByLabel("Vegan").check();
+    await page.getByTestId("dietary-passenger").getByLabel("Gluten Free").check();
+
     await page.getByLabel("Thursday Lunch — your meal *").selectOption("Pork Taco");
     await page.getByLabel("Thursday Lunch — passenger meal *").selectOption("Caesar Salad");
     await page.getByLabel(/thursday dinner/i).selectOption("2");
@@ -61,6 +64,7 @@ test.describe("Event registration page", () => {
     expect(row.first_name).toBe("Test");
     expect(row.has_passenger).toBe(true);
     expect(row.answers.addons!.thursday_dinner).toBe(2);
+    expect(row.answers.dietary!.driver).toContain("Vegan");
   });
 
   test("manual model input appears for All models makes", async ({ page }) => {

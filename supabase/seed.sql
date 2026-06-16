@@ -91,6 +91,7 @@ select
       { "make": "Porsche", "models": ["718 GTS/GT4/GT4RS", "991.1/991.2", "GT3/3RS/Turbo/Turbo S/GTS", "All 992 models", "918"] }
     ],
     "shirt_sizes": ["XS", "SML", "MED", "LRG", "XL", "XXL", "3XL"],
+    "dietary_options": ["Vegan", "Vegetarian", "No Dairy", "Gluten Free"],
     "passenger_enabled": true,
     "waiver_text": "PLACEHOLDER WAIVER — final liability text pending from the club. By checking the box you acknowledge that motorsport and group-drive activities carry inherent risk and you release SSRG, its organizers, and venues from liability for injury or property damage arising from participation."
   }'::jsonb
