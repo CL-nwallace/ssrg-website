@@ -19,6 +19,7 @@ export type RegistrationConfig = {
   addons: Addon[];
   car_options: CarOption[];
   shirt_sizes: string[];
+  dietary_options: string[];
   passenger_enabled: boolean;
   waiver_text: string;
 };
@@ -70,6 +71,7 @@ export const MONTEREY_TEMPLATE: RegistrationConfig = {
     },
   ],
   shirt_sizes: ["XS", "SML", "MED", "LRG", "XL", "XXL", "3XL"],
+  dietary_options: ["Vegan", "Vegetarian", "No Dairy", "Gluten Free"],
   passenger_enabled: true,
   waiver_text:
     "PLACEHOLDER WAIVER — final liability text pending from the club. By checking the box you acknowledge that motorsport and group-drive activities carry inherent risk and you release SSRG, its organizers, and venues from liability for injury or property damage arising from participation.",
@@ -136,6 +138,16 @@ export function parseRegistrationConfig(raw: unknown): RegistrationConfig | null
   if (typeof o.passenger_enabled !== "boolean") return null;
   if (!isNonEmptyString(o.waiver_text)) return null;
 
+  // dietary_options is optional (absent in pre-feature configs → empty list);
+  // when present it must be an array of non-empty strings (empty array allowed).
+  if (
+    o.dietary_options !== undefined &&
+    !(Array.isArray(o.dietary_options) && o.dietary_options.every(isNonEmptyString))
+  ) {
+    return null;
+  }
+  const dietary_options: string[] = (o.dietary_options as string[] | undefined) ?? [];
+
   // Duplicate keys would make `answers` ambiguous.
   const keys = [...meals.map((m) => m.key), ...addons.map((a) => a.key)];
   if (new Set(keys).size !== keys.length) return null;
@@ -145,6 +157,7 @@ export function parseRegistrationConfig(raw: unknown): RegistrationConfig | null
     addons,
     car_options,
     shirt_sizes: o.shirt_sizes,
+    dietary_options,
     passenger_enabled: o.passenger_enabled,
     waiver_text: o.waiver_text,
   };

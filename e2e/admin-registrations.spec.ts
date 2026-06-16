@@ -39,6 +39,7 @@ test.describe("Admin registrations view", () => {
             passenger_social: "@pat",
             meals: { thursday_lunch: { driver: "Pork Taco", passenger: "Caesar Salad" } },
             addons: { thursday_dinner: 2 },
+            dietary: { driver: ["Vegan"], passenger: ["Gluten Free"] },
           },
           waiver_accepted_at: new Date().toISOString(),
           amount_paid_cents: 99700,
@@ -79,6 +80,8 @@ test.describe("Admin registrations view", () => {
     await expect(summary).toContainText("Pork Taco: 1");
     await expect(summary).toContainText("Caesar Salad: 1");
     await expect(summary).toContainText("thursday_dinner: 2");
+    await expect(summary).toContainText("Vegan: 1");
+    await expect(summary).toContainText("Gluten Free: 1");
   });
 
   test("CSV export contains paid rows only", async ({ page, context }) => {
@@ -90,8 +93,10 @@ test.describe("Admin registrations view", () => {
     expect(res.headers()["content-type"]).toContain("text/csv");
     const csv = await res.text();
     expect(csv.split("\n")[0]).toContain("Shirt size");
+    expect(csv.split("\n")[0]).toContain("Driver dietary");
     expect(csv).toContain("ada@example.com");
     expect(csv).toContain("thursday_dinner x2");
+    expect(csv).toContain("Vegan");
     expect(csv).not.toContain("bob@example.com");
   });
 

@@ -48,6 +48,7 @@ export default function RegistrationSettingsFields({
   );
   const [carsText, setCarsText] = useState(carsToText(initialConfig.car_options));
   const [sizesText, setSizesText] = useState(initialConfig.shirt_sizes.join(", "));
+  const [dietaryText, setDietaryText] = useState(initialConfig.dietary_options.join(", "));
   const [passengerEnabled, setPassengerEnabled] = useState(
     initialConfig.passenger_enabled,
   );
@@ -70,6 +71,7 @@ export default function RegistrationSettingsFields({
     })),
     car_options: textToCars(carsText),
     shirt_sizes: sizesText.split(",").map((s) => s.trim()).filter(Boolean),
+    dietary_options: dietaryText.split(",").map((s) => s.trim()).filter(Boolean),
     passenger_enabled: passengerEnabled,
     waiver_text: waiverText,
   };
@@ -250,6 +252,15 @@ export default function RegistrationSettingsFields({
         <input
           value={sizesText}
           onChange={(e) => setSizesText(e.target.value)}
+          className={fieldClass}
+        />
+      </label>
+
+      <label className="block">
+        <span className="text-sm font-medium">Dietary options (comma-separated)</span>
+        <input
+          value={dietaryText}
+          onChange={(e) => setDietaryText(e.target.value)}
           className={fieldClass}
         />
       </label>

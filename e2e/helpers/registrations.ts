@@ -20,6 +20,7 @@ export type RegistrationRow = {
     instagram?: string | null;
     facebook?: string | null;
     passenger_social?: string | null;
+    dietary?: { driver?: string[]; passenger?: string[] };
     meals?: Record<string, { driver?: string; passenger?: string }>;
     addons?: Record<string, number>;
   };

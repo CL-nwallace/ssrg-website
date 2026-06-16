@@ -19,6 +19,7 @@ export type ValidatedRegistration = {
       instagram: string | null;
       facebook: string | null;
       passenger_social: string | null;
+      dietary: { driver: string[]; passenger?: string[] };
       meals: Record<string, { driver: string; passenger?: string }>;
       addons: Record<string, number>;
     };
@@ -167,6 +168,35 @@ export function validateSubmission(
     }
   }
 
+  // Dietary restrictions: optional multi-select per person; every selected
+  // value must exist in config.dietary_options (no client-injected values).
+  const dietaryInput = (typeof o.dietary === "object" && o.dietary !== null
+    ? o.dietary
+    : {}) as Record<string, unknown>;
+  function parseDietary(raw: unknown): string[] | null {
+    if (raw === undefined || raw === null) return [];
+    if (!Array.isArray(raw)) return null;
+    const out: string[] = [];
+    for (const v of raw) {
+      const s = str(v);
+      if (!config.dietary_options.includes(s)) return null;
+      out.push(s);
+    }
+    return out;
+  }
+  const driverDietary = parseDietary(dietaryInput.driver);
+  if (driverDietary === null) {
+    return { ok: false, error: "Invalid dietary restriction selected." };
+  }
+  let passengerDietary: string[] = [];
+  if (has_passenger) {
+    const pd = parseDietary(dietaryInput.passenger);
+    if (pd === null) {
+      return { ok: false, error: "Invalid dietary restriction selected." };
+    }
+    passengerDietary = pd;
+  }
+
   if (o.waiver_accepted !== true) {
     return { ok: false, error: "You must accept the waiver to register." };
   }
@@ -192,6 +222,9 @@ export function validateSubmission(
           instagram: str(o.instagram) || null,
           facebook: str(o.facebook) || null,
           passenger_social,
+          dietary: has_passenger
+            ? { driver: driverDietary, passenger: passengerDietary }
+            : { driver: driverDietary },
           meals,
           addons,
         },

@@ -21,6 +21,7 @@ export type PaidRegistration = {
     passenger_social?: string | null;
     meals?: Record<string, { driver?: string; passenger?: string }>;
     addons?: Record<string, number>;
+    dietary?: { driver?: string[]; passenger?: string[] };
   } | null;
 };
 

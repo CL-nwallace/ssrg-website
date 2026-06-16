@@ -52,6 +52,15 @@ export default async function RegistrationsPage({
     }
   }
 
+  const dietaryCounts = new Map<string, number>();
+  for (const r of registrations) {
+    const diet = [
+      ...(r.answers?.dietary?.driver ?? []),
+      ...(r.answers?.dietary?.passenger ?? []),
+    ];
+    for (const d of diet) dietaryCounts.set(d, (dietaryCounts.get(d) ?? 0) + 1);
+  }
+
   const revenueCents = registrations.reduce(
     (sum, r) => sum + (r.amount_paid_cents ?? 0),
     0,
@@ -108,6 +117,14 @@ export default async function RegistrationsPage({
             </p>
           ))}
         </div>
+        <div>
+          <h3 className="mb-1 font-semibold">Dietary</h3>
+          {Array.from(dietaryCounts).map(([k, n]) => (
+            <p key={k}>
+              {k}: {n}
+            </p>
+          ))}
+        </div>
       </section>
 
       <table className="w-full text-sm" data-testid="registrations-table">
@@ -119,6 +136,7 @@ export default async function RegistrationsPage({
             <th className="py-2">Shirts</th>
             <th className="py-2">Passenger</th>
             <th className="py-2">Add-ons</th>
+            <th className="py-2">Dietary</th>
             <th className="py-2">Paid</th>
             <th className="py-2">Date</th>
           </tr>
@@ -151,6 +169,12 @@ export default async function RegistrationsPage({
                   .join(", ") || "—"}
               </td>
               <td className="py-3">
+                {[
+                  ...(r.answers?.dietary?.driver ?? []),
+                  ...(r.answers?.dietary?.passenger ?? []),
+                ].join(", ") || "—"}
+              </td>
+              <td className="py-3">
                 {r.amount_paid_cents !== null
                   ? usd.format(r.amount_paid_cents / 100)
                   : "—"}
@@ -160,7 +184,7 @@ export default async function RegistrationsPage({
           ))}
           {registrations.length === 0 && (
             <tr>
-              <td colSpan={8} className="py-8 text-center text-gray-500">
+              <td colSpan={9} className="py-8 text-center text-gray-500">
                 No paid registrations yet.
               </td>
             </tr>

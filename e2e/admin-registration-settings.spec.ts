@@ -33,6 +33,7 @@ test.describe("Admin registration settings", () => {
     await page.getByLabel(/registration deadline/i).fill("2030-08-13T23:59");
     await page.getByLabel(/waiver text/i).fill("Updated waiver text for spec.");
     await page.getByLabel(/per-person cost/i).first().fill("250.00");
+    await page.getByLabel(/dietary options/i).fill("Vegan, Halal");
     await page.getByRole("button", { name: /save/i }).click();
     await page.waitForURL("**/admin/events");
 
@@ -47,6 +48,7 @@ test.describe("Admin registration settings", () => {
     expect(data!.registration_config.shirt_sizes).toEqual([
       "XS", "SML", "MED", "LRG", "XL", "XXL", "3XL",
     ]);
+    expect(data!.registration_config.dietary_options).toEqual(["Vegan", "Halal"]);
   });
 
   test("rejects invalid settings (empty shirt sizes)", async ({ page, context }) => {
