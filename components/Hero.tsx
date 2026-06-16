@@ -89,14 +89,18 @@ export default function Hero({
             {title}
           </motion.h1>
         )}
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="mt-4 text-sm uppercase tracking-[0.4em] text-text-secondary"
-        >
-          {subtitle}
-        </motion.p>
+        {/* The logo artwork already includes the "Exotic Car Lifestyle" tagline,
+            so only render the subtitle text when the logo isn't shown. */}
+        {!showLogo && subtitle ? (
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="mt-4 text-sm uppercase tracking-[0.4em] text-text-secondary"
+          >
+            {subtitle}
+          </motion.p>
+        ) : null}
       </div>
 
       {/* Scroll indicator */}
