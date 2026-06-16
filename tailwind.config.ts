@@ -26,8 +26,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        serif: ["Cormorant", "serif"],
-        sans: ["Montserrat", "sans-serif"],
+        serif: ["var(--font-cormorant)", "serif"],
+        sans: ["var(--font-montserrat)", "sans-serif"],
       },
       fontSize: {
         "display": ["80px", { lineHeight: "1.05", letterSpacing: "-0.02em" }],
