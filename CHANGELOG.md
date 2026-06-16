@@ -3,10 +3,22 @@
 All notable changes to the SSRG website are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/); dates are the production-deploy date.
 
-## [Unreleased]
+## [2026-06-16]
 
-### Pending
-- **Custom domain cutover to `ssrgofficial.com`.** Moving DNS off Wix (nameservers → GoDaddy) and pointing the apex/`www` at Vercel while preserving Microsoft 365 email (MX/SPF/DMARC). Finishing steps once DNS propagates: Vercel TLS issuance, repoint the live Stripe webhook to `https://ssrgofficial.com/api/stripe/webhook`, and update the Supabase auth site/redirect URLs.
+### Added
+- **Brand guide.** An unlisted `/brand` page (noindex, not in the navbar) rendered from the live Tailwind tokens — logo, color, typography, voice & tone, UI components, merch, and favicon — plus a `docs/brand/SSRG-brand-guide.md` reference for handoff.
+
+### Changed
+- **Custom domain live: `ssrgofficial.com`.** DNS moved off Wix to GoDaddy-managed (apex → Vercel, `www` → Vercel), with Microsoft 365 email preserved and SPF corrected to authorize M365. TLS issued; live Stripe webhook repointed to the custom domain; Supabase auth URLs updated.
+- **Fonts self-hosted via `next/font`** (Cormorant + Montserrat), replacing an invalid Google-Fonts `@import` that was leaving the site on system fonts.
+
+### Fixed
+- **Browser-tab favicon** now shows the SSRG mark white-on-dark (was a stale near-black icon); generated from the logo and served via `app/icon.png`.
+- **Duplicate tagline on the hero** — the logo art already contains "Exotic Car Lifestyle", so the redundant subtitle line was removed when the logo is shown.
+- **Local lint now matches CI** (`root: true` in ESLint config) so unused-code errors are caught before deploy.
+
+### Security
+- Rotated the live Stripe secret key (the prior key had been exposed); production verified on the new key.
 
 ## [2026-06-15]
 
