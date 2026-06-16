@@ -51,12 +51,8 @@ export default function IconBlock() {
           </p>
           <ul className="space-y-2 font-mono text-small text-text-secondary">
             <li>
-              <span className="text-text-primary">app/favicon.ico</span>{" "}
-              <span className="text-text-muted">— browser tab, 32px fallback</span>
-            </li>
-            <li>
               <span className="text-text-primary">app/icon.png</span>{" "}
-              <span className="text-text-muted">— primary PNG icon (Next.js metadata convention)</span>
+              <span className="text-text-muted">— 512×512, the browser-tab favicon (Next.js metadata convention; no legacy .ico)</span>
             </li>
             <li>
               <span className="text-text-primary">app/apple-icon.png</span>{" "}

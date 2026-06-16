@@ -197,8 +197,7 @@ border-bottom: 1px solid rgba(255,255,255,0.06);
 
 | File | Size | Use |
 |---|---|---|
-| `app/favicon.ico` | 32px | Browser tab, legacy fallback |
-| `app/icon.png` | Varies | Primary PNG icon (Next.js metadata) |
+| `app/icon.png` | 512×512 | Browser-tab favicon (Next.js metadata convention; no legacy `.ico`) |
 | `app/apple-icon.png` | 180×180 | iOS home screen |
 
 ### Notes
