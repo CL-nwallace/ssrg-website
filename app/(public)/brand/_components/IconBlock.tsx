@@ -16,28 +16,30 @@ export default function IconBlock() {
             Favicon &amp; Icon System
           </h2>
           <p className="mt-4 text-body text-text-secondary max-w-2xl">
-            The favicon is derived from the SSRG wordmark on the brand-dark
-            background. It renders at multiple sizes across browsers, OS docks,
-            and PWA install prompts.
+            The favicon is the SSRG wordmark on a transparent background. The
+            browser-tab icon uses the dark mark so it stays legible on the light
+            tab bars most desktop browsers use; the iOS home-screen icon uses the
+            white mark on the brand-dark tile (iOS forces an opaque background).
           </p>
         </div>
 
-        {/* Icon display panel */}
+        {/* Icon display panel — shown on a light chip, mirroring a light browser tab */}
         <div className="bg-bg-elevated border border-subtle rounded-lg p-10 mb-10">
           <p className="text-small text-text-secondary uppercase tracking-widest font-semibold mb-8">
-            Icon at Various Sizes
+            Tab icon at various sizes (on a light tab background)
           </p>
           <div className="flex items-end gap-8 flex-wrap">
             {ICON_SIZES.map((size) => (
               <div key={size} className="flex flex-col items-center gap-3">
-                <Image
-                  src="/icon.png"
-                  alt={`SSRG favicon at ${size}px`}
-                  width={size}
-                  height={size}
-                  className="rounded"
-                  unoptimized
-                />
+                <div className="rounded bg-text-primary p-1.5">
+                  <Image
+                    src="/icon.png"
+                    alt={`SSRG favicon at ${size}px`}
+                    width={size}
+                    height={size}
+                    unoptimized
+                  />
+                </div>
                 <span className="text-small text-text-muted font-mono">{size}px</span>
               </div>
             ))}
