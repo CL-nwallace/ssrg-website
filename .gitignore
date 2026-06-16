@@ -40,3 +40,6 @@ next-env.d.ts
 /test-results/
 /playwright-report/
 /.firecrawl/
+
+# Playwright MCP screenshot/snapshot artifacts
+.playwright-mcp/
