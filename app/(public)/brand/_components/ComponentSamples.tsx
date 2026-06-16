@@ -1,9 +1,3 @@
-type Sample = {
-  label: string;
-  usage: string;
-  preview: React.ReactNode;
-};
-
 export default function ComponentSamples() {
   return (
     <section className="py-20 md:py-28" aria-labelledby="components-heading">
