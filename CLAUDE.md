@@ -39,6 +39,32 @@ Three admins in `public.admin_emails` (nickwallibe@, sally@, james@). Auth is **
 - Add an admin: `insert into public.admin_emails (email) values ('...');` then create/ensure the auth user with a password.
 - Forgot-password self-serve flow is **not** built. Admins contact Nico.
 
+## Stripe
+
+Itemized Checkout for `/events` registrations (v2, 2026-06). The form lives on
+`/events/[id]/register` and is generated from each event's `registration_config`
+JSONB (meals, paid add-ons, car list, shirt sizes, passenger toggle, waiver) —
+see `lib/registration/config.ts`; events with a null config fall back to the
+Monterey template. `/api/checkout` validates the submission server-side
+(`lib/registration/validate.ts`), inserts a `pending` registrations row, and
+creates a session with inline `price_data` line items (base registration +
+add-ons). No Stripe `custom_fields`. The webhook flips the row to `paid` by
+`metadata.registration_id` and records `amount_total` (checked against
+`metadata.amount_expected_cents`). Pending rows from abandoned checkouts are
+inert — every admin surface filters to `paid`. Admins edit settings per event in
+`/admin/events/[id]` and see registrations + CSV at
+`/admin/events/[id]/registrations`. Refunds in Stripe Dashboard; the
+`registrations` row stays as the historical record of payment.
+
+- **Modes:** test in Development + Preview, live in Production. Required env vars on Vercel: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`.
+- **Local webhook loop:** `stripe listen --api-key $STRIPE_SECRET_KEY --forward-to http://localhost:3000/api/stripe/webhook --events checkout.session.completed`. The printed `whsec_…` is per-machine stable — paste it into `.env.local` once and re-use.
+- **Test cards (test mode only):** `4242 4242 4242 4242` succeeds; `4000 0000 0000 0002` declines; `4000 0025 0000 3155` triggers 3DS.
+- **Registered endpoints (Test mode):** one endpoint `we_1TgThOQhL9YIw0hy8bsZujsY` at `https://ssrg-website-git-main-nwallace-3136s-projects.vercel.app/api/stripe/webhook`, subscribed to `checkout.session.completed` only. The endpoint id and URL can be looked up via `stripe webhook_endpoints list --api-key $STRIPE_SECRET_KEY`. The endpoint's `whsec_…` is the value stored as `STRIPE_WEBHOOK_SECRET` in Vercel **Preview**.
+- **Re-pointing test endpoint at a preview branch:** when you start using non-main preview deploys and want their webhooks to land, either (a) update the URL on the existing endpoint with `stripe webhook_endpoints update we_… --url <new-preview-url>` and update `STRIPE_WEBHOOK_SECRET` in Vercel Preview (secret stays the same on update), or (b) create a second endpoint for that URL and decide which whsec_ Preview should hold.
+- **Registered endpoint (Live mode):** `we_1TgZFfQhL9YIw0hyJALSpNoN` at `https://ssrg-website-nwallace-3136s-projects.vercel.app/api/stripe/webhook`, `checkout.session.completed` only. Its `whsec_…` + the live `sk_live_…` are in Vercel **Production** env (wired 2026-06-09). If the site later moves to the custom domain, update the endpoint URL with `stripe webhook_endpoints update we_1TgZFfQhL9YIw0hyJALSpNoN --url https://ssrgofficial.com/api/stripe/webhook --api-key $LIVE_KEY` — the signing secret survives URL updates.
+- **Health check trick:** an unsigned `POST /api/stripe/webhook` returning **400** proves `STRIPE_WEBHOOK_SECRET` is loaded (the route returns 500 when the env var is missing, 400 when only the signature is bad).
+- **Registration v2 deploy caveat:** the webhook now keys off `metadata.registration_id` and rejects v1-style sessions (`metadata.event_id`, `custom_fields`). Old in-flight Checkout sessions created before the v2 deploy will 400 on completion and leave no row — deploy at a quiet hour and watch Stripe dashboard webhook deliveries for the first ~24h (sessions live up to 24h), reconciling any stragglers manually.
+
 ## Vercel
 
 Project `nwallace-3136s-projects/ssrg-website` (framework `nextjs`, Node 22). Production: https://ssrg-website-nwallace-3136s-projects.vercel.app.

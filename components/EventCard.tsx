@@ -3,19 +3,21 @@ import Link from "next/link";
 import { sanitizedHtml } from "@/lib/render-html";
 
 interface EventCardProps {
+  eventId: string;
   image: string;
   title: string;
   price: string;
-  href: string;
   descriptionHtml?: string;
+  registrationOpen: boolean;
 }
 
 export default function EventCard({
+  eventId,
   image,
   title,
   price,
-  href,
   descriptionHtml,
+  registrationOpen,
 }: EventCardProps) {
   return (
     <div className="group bg-bg-elevated border border-subtle rounded-lg overflow-hidden hover:border-gold-muted/30 transition-colors">
@@ -37,12 +39,17 @@ export default function EventCard({
             dangerouslySetInnerHTML={sanitizedHtml(descriptionHtml)}
           />
         ) : null}
-        <Link
-          href={href}
-          className="inline-block mt-4 px-6 py-3 bg-gold text-bg-deep font-semibold text-small rounded hover:bg-gold-light transition-colors cursor-pointer"
-        >
-          Register Now
-        </Link>
+        {registrationOpen ? (
+          <Link
+            href={`/events/${eventId}/register`}
+            data-testid={`register-link-${eventId}`}
+            className="mt-4 inline-block px-6 py-3 bg-gold text-bg-deep font-semibold text-small rounded hover:bg-gold-light transition-colors"
+          >
+            Register Now
+          </Link>
+        ) : (
+          <p className="mt-4 text-small text-text-muted">Registration closed</p>
+        )}
       </div>
     </div>
   );

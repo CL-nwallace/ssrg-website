@@ -3,6 +3,8 @@
 import { useFormState, useFormStatus } from "react-dom";
 import TiptapEditor from "@/components/admin/TiptapEditor";
 import CoverImageInput from "@/components/admin/CoverImageInput";
+import RegistrationSettingsFields from "@/components/admin/RegistrationSettingsFields";
+import { MONTEREY_TEMPLATE } from "@/lib/registration/config";
 import { createEvent } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -61,6 +63,11 @@ export default function NewEventPage() {
             <option value="published">Published</option>
           </select>
         </label>
+
+        <RegistrationSettingsFields
+          initialConfig={MONTEREY_TEMPLATE}
+          initialDeadline={null}
+        />
 
         <SubmitButton />
       </form>
