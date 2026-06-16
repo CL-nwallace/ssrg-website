@@ -27,6 +27,8 @@ const HEADER = [
   "Passenger social",
   "Meals",
   "Add-ons",
+  "Driver dietary",
+  "Passenger dietary",
   "Amount paid (USD)",
 ];
 
@@ -58,6 +60,8 @@ export function registrationsToCsv(rows: PaidRegistration[]): string {
         r.answers?.passenger_social ?? "",
         meals,
         addons,
+        (r.answers?.dietary?.driver ?? []).join("; "),
+        (r.answers?.dietary?.passenger ?? []).join("; "),
         r.amount_paid_cents === null ? "" : (r.amount_paid_cents / 100).toFixed(2),
       ]
         .map(csvCell)
