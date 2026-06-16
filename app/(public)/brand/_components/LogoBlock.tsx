@@ -42,7 +42,7 @@ export default function LogoBlock() {
             alt="SSRG wordmark — white on dark background"
             width={264}
             height={93}
-            className="w-full max-w-xs"
+            className="w-full max-w-xs invert"
             priority
           />
         </div>

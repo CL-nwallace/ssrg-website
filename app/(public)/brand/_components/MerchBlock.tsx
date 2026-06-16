@@ -33,7 +33,7 @@ export default function MerchBlock() {
                 alt="SSRG white wordmark on dark garment"
                 width={200}
                 height={71}
-                className="opacity-100"
+                className="invert opacity-100"
               />
             </div>
             <div className="p-6">
@@ -60,7 +60,7 @@ export default function MerchBlock() {
                 alt="SSRG dark wordmark on light garment"
                 width={200}
                 height={71}
-                className="invert opacity-80"
+                className="opacity-80"
               />
             </div>
             <div className="p-6">

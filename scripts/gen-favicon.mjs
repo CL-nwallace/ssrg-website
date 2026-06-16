@@ -5,7 +5,10 @@ const BG = { r: 10, g: 10, b: 10, alpha: 1 };
 
 async function make(size, out, logoWidthRatio) {
   const lw = Math.round(size * logoWidthRatio);
-  const logo = await sharp("public/images/ssrg-logo.png").resize({ width: lw }).toBuffer();
+  const logo = await sharp("public/images/ssrg-logo.png")
+    .negate({ alpha: false })   // black artwork -> white, keep transparency
+    .resize({ width: lw })
+    .toBuffer();
   const meta = await sharp(logo).metadata();
   await sharp({ create: { width: size, height: size, channels: 4, background: BG } })
     .composite([{
