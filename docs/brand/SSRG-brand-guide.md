@@ -195,15 +195,15 @@ border-bottom: 1px solid rgba(255,255,255,0.06);
 
 ### Files
 
-| File | Size | Use |
-|---|---|---|
-| `app/icon.png` | 512×512 | Browser-tab favicon (Next.js metadata convention; no legacy `.ico`) |
-| `app/apple-icon.png` | 180×180 | iOS home screen |
+| File | Size | Treatment | Use |
+|---|---|---|---|
+| `app/icon.png` | 512×512 | Dark mark, transparent bg | Browser-tab favicon (Next.js convention; no legacy `.ico`) |
+| `app/apple-icon.png` | 180×180 | White mark, dark tile | iOS home screen (iOS forces an opaque background) |
 
 ### Notes
 
-- Icon uses `#0A0A0A` (bg-deep) background — blends in browser UIs with white surrounds.
-- At 16–32px the full SSRG wordmark is tight. If legibility degrades on a future update, consider a simplified monogram ("S" or "SS") for small sizes only.
+- The **tab favicon** uses the dark mark on transparent so it stays legible on the light tab bars most desktop browsers use; trade-off is low contrast on dark-mode tabs. The **iOS icon** uses the white mark on the brand-dark tile so it stays visible where iOS composites onto black.
+- At 16–32px the full SSRG wordmark is tight. If legibility degrades, consider a simplified monogram ("S" or "SS") for small sizes only.
 - Icons in `app/` are auto-wired by Next.js metadata convention — no manual `<link rel="icon">` required.
 - **Future option (v2):** SVG favicon with `prefers-color-scheme` support for OS theme switching.
 
